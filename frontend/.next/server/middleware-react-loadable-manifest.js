@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST="{\"lib/api.js -> ../store/authStore\":{\"id\":\"lib/api.js -> ../store/authStore\",\"files\":[]},\"store/authStore.js -> ./chatStore\":{\"id\":\"store/authStore.js -> ./chatStore\",\"files\":[\"static/chunks/_app-pages-browser_store_chatStore_js.js\"]}}"

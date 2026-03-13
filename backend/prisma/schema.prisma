@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  name             String
+  telegramId       String?   @unique
+  telegramLinkedAt DateTime?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  fitnessGoal      FitnessGoal?
+  workoutPlans     WorkoutPlan[]
+  workoutLogs      WorkoutLog[]
+  progressMetrics  ProgressMetric[]
+  conversationLogs ConversationLog[]
+  refreshTokens    RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model FitnessGoal {
+  id                  String          @id @default(cuid())
+  userId              String          @unique
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  age                 Int
+  weightKg            Float
+  heightCm            Float
+  goal                FitnessGoalType
+  experienceLevel     ExperienceLevel
+  equipment           String[]
+  daysPerWeek         Int
+  sessionMinutes      Int             @default(60)
+  dietaryRestrictions String[]
+  healthConditions    String[]
+  notes               String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@map("fitness_goals")
+}
+
+enum FitnessGoalType {
+  WEIGHT_LOSS
+  MUSCLE_GAIN
+  ENDURANCE
+  GENERAL_FITNESS
+  ATHLETIC_PERFORMANCE
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model WorkoutPlan {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  planData    Json
+  isActive    Boolean   @default(true)
+  weekNumber  Int       @default(1)
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  aiGenerated Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workoutLogs WorkoutLog[]
+
+  @@map("workout_plans")
+}
+
+model WorkoutLog {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId         String?
+  plan           WorkoutPlan? @relation(fields: [planId], references: [id])
+  completedAt    DateTime     @default(now())
+  durationMin    Int
+  exercisesData  Json
+  notes          String?
+  perceivedRPE   Int?
+  mood           String?
+  caloriesBurned Int?
+  createdAt      DateTime     @default(now())
+
+  @@index([userId, completedAt])
+  @@map("workout_logs")
+}
+
+model ProgressMetric {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordedAt DateTime @default(now())
+  metricType String
+  value      Float
+  unit       String   @default("")
+  notes      String?
+
+  @@index([userId, metricType, recordedAt])
+  @@map("progress_metrics")
+}
+
+model ConversationLog {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userMessage   String
+  agentResponse String
+  toolsUsed     String[]
+  channel       String   @default("web")
+  tokensUsed    Int?
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("conversation_logs")
+}

@@ -1,0 +1,19 @@
+{
+  // OpenClaw gateway configuration for FitCoach
+  // Docs: https://docs.openclaw.ai
+  //
+  // Copy this file to ~/.openclaw/openclaw.json
+  // or run:  cd openclaw && bash setup.sh
+
+  "agent": {
+    // Route through Groq — same provider as the web app agent
+    "model": "groq/qwen/qwen3-32b"
+  },
+
+  "channels": {
+    "telegram": {
+      // Same bot token used by the old Telegraf bot
+      "botToken": "${TELEGRAM_BOT_TOKEN}"
+    }
+  }
+}

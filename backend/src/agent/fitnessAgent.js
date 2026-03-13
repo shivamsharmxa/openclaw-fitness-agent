@@ -60,7 +60,7 @@ function trimToTokenBudget(history) {
 function stripThinkBlocks(text) {
   return text
     .replace(/<think>[\s\S]*?<\/think>/g, '')
-    .replace(/<\w[\w_]*>\{[\s\S]*?\}<\/\w[\w_]*>/g, '')
+    .replace(/<\w[\w_]*>[\s\S]*?<\/\w[\w_]*>/g, '')
     .trim();
 }
 

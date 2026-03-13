@@ -100,7 +100,10 @@ async function runFitnessAgent_generate({ userId, message, systemPrompt, trimmed
     },
   });
 
-  const responseText = stripThinkBlocks(result.text);
+  // Use the last step's text — result.text can concatenate intermediate
+  // tool-call step text which leaks XML artifacts.
+  const lastStepText = result.steps?.at(-1)?.text ?? result.text;
+  const responseText = stripThinkBlocks(lastStepText);
 
   history.push({ role: 'assistant', content: responseText });
   await conversationStore.set(userId, history);
@@ -143,12 +146,15 @@ export async function* streamFitnessAgent({ userId, message, channel = 'web' }) 
     },
   });
 
-  for await (const chunk of result.textStream) {
-    fullText += chunk;
+  // Use fullStream and only collect text-delta events — this filters out
+  // tool-call and tool-result events at the source, preventing any XML
+  // tool-call artifacts from leaking into the response text.
+  for await (const event of result.fullStream) {
+    if (event.type === 'text-delta') {
+      fullText += event.textDelta;
+    }
   }
 
-  // Clean before yielding — XML tool-call artifacts span multiple chunks
-  // so we must buffer the full response before stripping.
   const cleanedText = stripThinkBlocks(fullText);
   yield cleanedText;
 

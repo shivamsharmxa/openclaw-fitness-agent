@@ -3,8 +3,8 @@ FROM node:20-slim
 # Install git (required by npm for some packages) and other deps
 RUN apt-get update -y && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
-# Install openclaw globally
-RUN npm install -g openclaw@latest
+# Install openclaw and skill dependencies globally
+RUN npm install -g openclaw@latest axios
 
 # Set up ~/.openclaw directory structure
 RUN mkdir -p /root/.openclaw/workspace/skills/fitcoach

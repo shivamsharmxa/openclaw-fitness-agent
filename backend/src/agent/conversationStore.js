@@ -29,12 +29,13 @@ class ConversationStore {
         lazyConnect: true,
         connectTimeout: 3000,
         maxRetriesPerRequest: 1,
+        retryStrategy: () => null, // don't retry — fall back to memory on failure
       });
 
+      // Suppress the unhandled error event that fires on connection loss
+      client.on('error', () => {});
+
       await client.connect();
-      client.on('error', (err) =>
-        logger.warn('Redis connection error — falling back to memory', { error: err.message })
-      );
 
       this._redis = client;
       this._useRedis = true;

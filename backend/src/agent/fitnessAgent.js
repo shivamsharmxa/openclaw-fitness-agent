@@ -151,7 +151,7 @@ export async function* streamFitnessAgent({ userId, message, channel = 'web' }) 
   // tool-call artifacts from leaking into the response text.
   for await (const event of result.fullStream) {
     if (event.type === 'text-delta') {
-      fullText += event.textDelta;
+      fullText += event.text ?? event.textDelta ?? '';
     }
   }
 

@@ -1,5 +1,8 @@
 FROM node:20-slim
 
+# Install git (required by npm for some packages) and other deps
+RUN apt-get update -y && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
 # Install openclaw globally
 RUN npm install -g openclaw@latest
 

@@ -56,9 +56,12 @@ function trimToTokenBudget(history) {
   return kept;
 }
 
-// Strip any <think>...</think> blocks that leak through despite budget_tokens: 0
+// Strip <think> blocks and any XML-style tool call artifacts leaked by weak models
 function stripThinkBlocks(text) {
-  return text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  return text
+    .replace(/<think>[\s\S]*?<\/think>/g, '')
+    .replace(/<\w[\w_]*>\{[\s\S]*?\}<\/\w[\w_]*>/g, '')
+    .trim();
 }
 
 // ── Main entry point ──────────────────────────────────────────────────────────
@@ -142,19 +145,22 @@ export async function* streamFitnessAgent({ userId, message, channel = 'web' }) 
 
   for await (const chunk of result.textStream) {
     fullText += chunk;
-    yield chunk;
   }
+
+  // Clean before yielding — XML tool-call artifacts span multiple chunks
+  // so we must buffer the full response before stripping.
+  const cleanedText = stripThinkBlocks(fullText);
+  yield cleanedText;
 
   // Fire-and-forget persistence — must NOT await here.
   // Awaiting after the last yield blocks the caller's for-await loop,
   // preventing chatController from writing [DONE] and ending the response.
   Promise.resolve().then(async () => {
-    const cleanText = stripThinkBlocks(fullText);
-    history.push({ role: 'assistant', content: cleanText });
+    history.push({ role: 'assistant', content: cleanedText });
     await conversationStore.set(userId, history);
     const usage = (await result.usage)?.totalTokens;
     prisma.conversationLog.create({
-      data: { userId, userMessage: message, agentResponse: cleanText, toolsUsed: toolsUsedInRun, channel, tokensUsed: usage ?? null },
+      data: { userId, userMessage: message, agentResponse: cleanedText, toolsUsed: toolsUsedInRun, channel, tokensUsed: usage ?? null },
     }).catch(err => logger.error('Failed to log conversation', { error: err.message }));
   }).catch(err => logger.error('Post-stream persistence failed', { error: err.message }));
 }

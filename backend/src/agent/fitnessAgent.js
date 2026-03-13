@@ -41,14 +41,9 @@ function createBoundTools(userId) {
   };
 }
 
-// Provider options: disable Qwen3 extended thinking (budget_tokens: 0)
-// and set temperature. These are passed through to Groq's API.
-const PROVIDER_OPTIONS = {
-  groq: { budget_tokens: 0 },
-};
 
 // ── Token budget guard (≈4 chars/token) ──────────────────────────────────────
-const MAX_CONTEXT_TOKENS = 2000;
+const MAX_CONTEXT_TOKENS = 6000;
 
 function trimToTokenBudget(history) {
   let count = 0;
@@ -96,7 +91,7 @@ async function runFitnessAgent_generate({ userId, message, systemPrompt, trimmed
     maxSteps: 3,
     temperature: 0.7,
     maxTokens: env.AI_MAX_TOKENS,
-    providerOptions: PROVIDER_OPTIONS,
+
     onStepFinish({ toolCalls }) {
       toolCalls?.forEach(tc => toolsUsedInRun.push(tc.toolName));
     },
@@ -139,7 +134,7 @@ export async function* streamFitnessAgent({ userId, message, channel = 'web' }) 
     maxSteps: 3,
     temperature: 0.7,
     maxTokens: env.AI_MAX_TOKENS,
-    providerOptions: PROVIDER_OPTIONS,
+
     onStepFinish({ toolCalls }) {
       toolCalls?.forEach(tc => toolsUsedInRun.push(tc.toolName));
     },
